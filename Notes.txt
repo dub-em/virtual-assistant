@@ -1,0 +1,9 @@
+Two Sections
+-Conversational Section
+	-OpenAI general knowledge
+	-Uploaded Custom Knowledge to Vector Store (EUR_GDPR_Guideline)
+	-Uploaded Custom Knowledge about the available features
+-Command Execution Section
+	-Features to be executed
+		-Search a website for a given piece of information
+		-Search the images in a website for information
