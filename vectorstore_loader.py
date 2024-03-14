@@ -9,6 +9,7 @@ os.environ["PINECONE_API_KEY"] = settings.pinecone_api_key
 
 
 def extract_text_from_pdf(pdf_file_path):
+    '''This function extract the texts from all the pages of a specified PDF.'''
     text = ""
     with open(pdf_file_path, "rb") as file:
         reader = PyPDF2.PdfReader(file)
@@ -22,6 +23,7 @@ def extract_text_from_pdf(pdf_file_path):
 
 
 def split_text_into_chunks(text, words_per_chunk):
+    '''This function takes in the text extracted from the PDF and splits it into chunks.'''
     words = text.split()
     print(f"Number of words: {len(words)}")
     chunks = [' '.join(words[i:i+words_per_chunk]) for i in range(0, len(words), words_per_chunk)]
@@ -29,6 +31,9 @@ def split_text_into_chunks(text, words_per_chunk):
 
 
 def vectorstore_loader():
+    '''This function responsible for parsing a pdf and loading it's contents into the 
+    Vector Store in chunks.'''
+    
     pdf_file_path = "EUR_GDPR_Guidelines.pdf"  # Path to your PDF file
     words_per_chunk = 50  # Number of words per chunk
 
@@ -46,5 +51,3 @@ def vectorstore_loader():
 
 if __name__ == "__main__":
     vectorstore_loader()
-
-

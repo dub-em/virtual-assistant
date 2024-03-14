@@ -7,7 +7,10 @@ from config import settings
 import utilities
 
 
-def chatbot():
+def virtual_assistant():
+    '''This function is the implementation of a virtual assistant that has conversational
+    abilities and command-related abilities too.'''
+
     #Creates the prompt to punctuate the subtitle extracted from the given video
     messages = [
         {"role":"system","content":"you are a virtual assistant"}]
@@ -15,22 +18,30 @@ def chatbot():
     user_input = input('Message VA: ')
     
     while user_input != 'quit':
-        custom_knowledge = utilities.vectorstore_similaritysearch(user_input)
-        # print(f"\nCustom Knowledge: {custom_knowledge}\n")
-        
-        # quitAdds the prompts to the chat memory
-        messages.append({"role": "system", "content": custom_knowledge},)
-        messages.append({"role": "user", "content": user_input},)
 
-        reply = utilities.gpt_punctuator(messages)
+        response = utilities.conversation_or_command(user_input)
+        print(response)
 
-        messages.append({"role": "assistant", "content": reply},)
+        if 'Conversation' in response:
+            custom_knowledge = utilities.vectorstore_similaritysearch(user_input)
+            # print(f"\nCustom Knowledge: {custom_knowledge}\n")
+            
+            # quitAdds the prompts to the chat memory
+            messages.append({"role": "system", "content": custom_knowledge},)
+            messages.append({"role": "user", "content": user_input},)
 
-        print(f"\nVirtual Assistant: {reply}\n")
+            reply = utilities.conversation_component(messages)
 
-        user_input = input('Message VA: ')
+            messages.append({"role": "assistant", "content": reply},)
 
+            print(f"\nVirtual Assistant: {reply}\n")
+
+            user_input = input('Message VA: ')
+        else:
+            print(f"Apologies, my current version isn't capable of carrying out commands.")
+
+            user_input = input('Message VA: ')
 
 
 if __name__ == "__main__":
-    chatbot()
+    virtual_assistant()

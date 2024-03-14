@@ -9,3 +9,7 @@ PyMuPDF
 spire.pdf
 pydantic
 pydantic_settings
+selenium
+fake_useragent
+requests
+wrapt_timeout_decorator
