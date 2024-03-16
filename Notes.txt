@@ -1,9 +1,20 @@
 Two Sections
 -Conversational Section
-	-OpenAI general knowledge
-	-Uploaded Custom Knowledge to Vector Store (EUR_GDPR_Guideline)
+	-OpenAI general knowledge -Done
+	-Uploaded Custom Knowledge to Vector Store (EUR_GDPR_Guideline) -Done
 	-Uploaded Custom Knowledge about the available features
 -Command Execution Section
 	-Features to be executed
-		-Search a website for a given piece of information
+		-Search a website for a given piece of information -Done
 		-Search the images in a website for information
+
+Next Steps
+-Document the features and attach it to the base of every message prompt list -Done
+-Finetune a model to successfully connect different types of command user input to the available features (include examples of cases where input doesn't point to any available features) -Done
+-Integrate this custom model into the comand driven section of the chatbot -Done
+
+-Once a feature is identified, use the feature name to extract the needed parameters from the user input.
+	-assign any extracted parameter to a key in a generated dictionary
+	-If any parameter without a default value is missing, then ask the user to input that specific parameter again
+	-Send these parameter into the feature for execution
+	-Provide user with feedback.

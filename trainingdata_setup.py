@@ -2,14 +2,15 @@ import json
 import variable
 
 def training():
-    data = variable.conv_or_comm_data
+    # data = variable.conv_or_comm_data
+    data = variable.identify_feature
 
-    training_data = data[:80]
-    testing_data = data[80:]
+    training_data = data[:23]
+    testing_data = data[23:]
 
     # File path to save the JSON file
-    json_file_path_1 = "training_data.jsonl"
-    json_file_path_2 = "testing_data.jsonl"
+    json_file_path_1 = "finetuning_dataset/identifyfeat_trainingdata.jsonl"
+    json_file_path_2 = "finetuning_dataset/identifyfeat_testingdata.jsonl"
 
     # Write training data to JSON file
     # with open(json_file_path_1, "w") as json_file:

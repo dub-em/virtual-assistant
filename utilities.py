@@ -27,7 +27,7 @@ def conversation_or_command(information):
 
     #Creates the prompt to check for the most similar column
     prompt_1 = f"{information}"
-    prompt_2 = f"Given this input from the user, would you classify this request under 'Conversation' or 'Command'"
+    prompt_2 = f"Given this input above from the user, would you classify this request under 'Conversation' or 'Command'"
 
     #Adds the prompts to the chat memory
     messages_1.append({"role": "user", "content": prompt_1},)
@@ -38,6 +38,7 @@ def conversation_or_command(information):
     chat_completion = client.chat.completions.create(
         messages=messages_1,
         model="ft:gpt-3.5-turbo-1106:personal:conv-or-comm:92lF8Njb",
+        # model="gpt-3.5-turbo-1106",
         temperature=0.0,) 
 
     #Response is extracted
@@ -77,6 +78,38 @@ def vectorstore_similaritysearch(user_input):
 
 
 #Command related features
+def identify_features(information):
+    '''Function is responsible for querying the GPT-3.5 model for analysis of a given content.'''
+    from openai import OpenAI
+
+    client = OpenAI(
+        # This is the default and can be omitted
+        api_key=settings.openai_apikey,)
+
+    #Prompt engineering message to be fed to the GPT model.
+    messages_1 = [{"role":"system","content":"You are a text analyst assistant. Given a text input from a user, categorize the input under one of the following features [Web Analyzer, None]"}]
+
+    #Creates the prompt to check for the most similar column
+    prompt_1 = f"{information}"
+    prompt_2 = f"Given this input above from the user, please classify this request under one of the given given features in this list [Web Analyzer, None]."
+
+    #Adds the prompts to the chat memory
+    messages_1.append({"role": "user", "content": prompt_1},)
+    messages_1.append({"role": "user", "content": prompt_2},)
+
+    
+    #GPT model is triggered and response is generated.
+    chat_completion = client.chat.completions.create(
+        messages=messages_1,
+        model="ft:gpt-3.5-turbo-1106:personal:identify-features:93RqU9Ph",
+        # model="gpt-3.5-turbo-1106",
+        temperature=0.0,) 
+
+    #Response is extracted
+    response = chat_completion.choices[0].message.content
+    return (response)
+
+
 def content_extractor(url_link):
     '''This function extracts all the content from a given page in a website.'''
     
@@ -178,7 +211,16 @@ def gpt_analyst(information):
 
 def web_crawler_feature(user_input):
     '''This function executes a kind of overview analysis of the content to filter which contents should be
-    analysed and which should be discarded.'''
+    analysed and which should be discarded.
+    
+    Parameters
+    ----------
+    url link (string): The url link of the website that the user want to have analysed.
+    prompt (string): The user input regarding what the analysis is about.
+
+    Returns
+    ----------
+    Returns the result of the analysis conducted by the LLM model.'''
 
     url_link = user_input['url_link']
     prompt = user_input['prompt']
