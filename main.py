@@ -104,9 +104,9 @@ def virtual_assistant():
                 funct_dict = {'Web Analyzer':utilities.web_crawler_feature}
 
                 # Automatically executes the identfied function and the extracted arguments
-                # analysis_result = utilities.execute_function_wrapper(funct_dict[feature_type], param_value)
+                analysis_result = utilities.execute_function_wrapper(funct_dict[feature_type], param_value)
 
-                # return analysis_result
+                return analysis_result
             else:
                 #if feature being asked for by user isn't in list of functions then, outputs the message below.
                 print(f"Apologies, my current version isn't capable of carrying out this specific commands.")
