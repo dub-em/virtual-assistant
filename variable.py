@@ -913,4 +913,15 @@ identify_feature = [
                 {"role": "assistant", "content": "None"}
             ]
         }
-    ] 
+    ]
+
+
+feature_param = {'Web Analyzer':['url_link', 'purpose_of_analysis']}
+
+
+feature_param_extract_prompt = {'Web Analyzer':{'url_link':"Please extract and output only the url link (if any) in the user input above for analysis. If there is no url link, output 'None'.",
+                                                'purpose_of_analysis':"Please extract and output only the purpose of analysis (if any) in the user input above for analysis. Please do not output the link along wih the purpose of analysis. Do not form a sentence with the purpose, simple output the purpose of analysis and nothing more. If there is no purpose of analysis, output 'None'."}}
+
+
+feature_param_request = {'Web Analyzer':{'url_link':"The url link needed to execute your request is missing. Please provide a url link.",
+                                         'purpose_of_analysis':"The is no purpose of analysis in your request. Please specify a purpose of request."}}

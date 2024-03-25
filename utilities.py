@@ -14,6 +14,13 @@ import concurrent.futures
 from config import settings
 
 
+def execute_function_wrapper(func, arg):
+    '''This function takes a function name and it's argument and executes the said function.'''
+    # Execute the provided function with its arguments
+    result = func(arg)
+    return result
+
+
 def conversation_or_command(information):
     '''Function is responsible for querying the GPT-3.5 model for analysis of a given content.'''
     from openai import OpenAI
@@ -110,6 +117,84 @@ def identify_features(information):
     return (response)
 
 
+def feature_param_extract(params):
+    '''This function takes in a list of dictionaries, identified feature and the user input and using a set of predefined
+    prompts, extracts the arguments needed to execute the identified feature.'''
+
+    # Assigns the list of input arguments to their respective variables
+    feature_params = params[0]
+    feature_param_extract_prompt = params[1]
+    feature_param_request = params[2]
+    identified_feat = params[3] #identified feature from the user input
+    user_request = params[4] #the user input to be analyzed
+
+    param_list = list(feature_params[identified_feat])
+    param_value = {feature:'' for feature in param_list}
+    print(param_value)
+
+    # Takes each expected argument and automate its extraction from the user input using GPT.
+    for feature in param_list:
+        prompt = feature_param_extract_prompt[identified_feat][feature]
+        input_set = (prompt, user_request)
+        value = (gpt_param_extractor(input_set))[1]
+        if "None" not in value:
+            param_value[feature] = value
+
+    print(param_value)
+    
+    # Checks the list of extracted arguments to see which is missing and prompts the user to provide any missing arguments.
+    while '' in list(param_value.values()): #keeps looping through the missing arguments till they're all provided by the user.
+        for feature in param_list:
+            if param_value[feature] == '':
+                #prompts the user to input the missing argument
+                print(feature_param_request[identified_feat][feature])
+                user_request_1 = input('Message VA: ')
+
+                #uses GPT to extract the missing argument from the provided input
+                prompt = feature_param_extract_prompt[identified_feat][feature]
+                input_set = (prompt, user_request_1)
+                value = (gpt_param_extractor(input_set))[1]
+
+                # Appends the value to the existing dictionary if value is not 'None'
+                if "None" not in value:
+                    param_value[feature] = value
+
+    print(param_value)
+    return param_value
+
+
+@timeout(5)
+def gpt_param_extractor(information):
+    '''Function is responsible for querying the GPT-3.5 model for analysis of a given content.'''
+    from openai import OpenAI
+
+    client = OpenAI(
+        # This is the default and can be omitted
+        api_key=settings.openai_apikey,)
+    
+    #Prompt engineering message to be fed to the GPT model.
+    messages_1 = []
+
+    #Creates the prompt to check for the most similar column
+    prompt_1 = f"This is the user input '{information[1]}'"
+    prompt_2 = f"{information[0]}"
+
+    #Adds the prompts to the chat memory
+    messages_1.append({"role": "user", "content": prompt_1},)
+    messages_1.append({"role": "user", "content": prompt_2},)
+
+    
+    #GPT model is triggered and response is generated.
+    chat_completion = client.chat.completions.create(
+        messages=messages_1,
+        model="gpt-3.5-turbo",
+        temperature=0.0,) 
+
+    #Response is extracted
+    response = chat_completion.choices[0].message.content
+    return (information[1], response)
+
+
 def content_extractor(url_link):
     '''This function extracts all the content from a given page in a website.'''
     
@@ -177,7 +262,7 @@ def etl_extrct_mthd(url_link):
     return content_1
 
 
-@timeout(5)  #Sets the timeout duration in seconds (e.g., 5 seconds)
+@timeout(5)
 def gpt_analyst(information):
     '''Function is responsible for querying the GPT-3.5 model for analysis of a given content.'''
     from openai import OpenAI
@@ -223,7 +308,7 @@ def web_crawler_feature(user_input):
     Returns the result of the analysis conducted by the LLM model.'''
 
     url_link = user_input['url_link']
-    prompt = user_input['prompt']
+    prompt = user_input['purpose_of_analysis']
 
     web_contents = etl_extrct_mthd(url_link)
     web_contents = [(prompt, content) for content in web_contents]

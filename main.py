@@ -5,6 +5,7 @@ from langchain_pinecone import PineconeVectorStore
 from openai import OpenAI
 from config import settings
 import utilities
+import variable
 
 
 def virtual_assistant():
@@ -70,24 +71,45 @@ def virtual_assistant():
             custom_knowledge = utilities.vectorstore_similaritysearch(user_input)
             # print(f"\nCustom Knowledge: {custom_knowledge}\n")
             
-            # quitAdds the prompts to the chat memory
+            # Adds the custom knowledge and user input to the chat memory
             messages.append({"role": "system", "content": custom_knowledge},)
             messages.append({"role": "user", "content": user_input},)
 
+            # Sends the chat memory to GPT to generate a response
             reply = utilities.conversation_component(messages)
 
-            messages.append({"role": "assistant", "content": reply},)
+            messages.append({"role": "assistant", "content": reply},) #adds reposne to chat memory
 
             print(f"\nVirtual Assistant: {reply}\n")
 
-            user_input = input('Message VA: ')
+            user_input = input('Message VA: ') #prompts more user input
         else:
+            #if user input is for a command execution, identify the feature linked to the user input
             feature_type = utilities.identify_features(user_input)
 
             if feature_type in ['Web Analyzer']:
+                #if identified feature is in list of user inputs extract the parameters needed to execute that feature from the user input
                 print(feature_type)
+                params = [variable.feature_param,
+                          variable.feature_param_extract_prompt,
+                          variable.feature_param_request,
+                          feature_type,
+                          user_input
+                          ] #creates list of prompt dictionaries and other variables
+                
+                # Extracts the needed arguments for the identified function, including prompting user to input any arguments not provided in their original input.
+                param_value = utilities.feature_param_extract(params)
+
+                # Dictionary containing function titles and their respective methods
+                funct_dict = {'Web Analyzer':utilities.web_crawler_feature}
+
+                # Automatically executes the identfied function and the extracted arguments
+                # analysis_result = utilities.execute_function_wrapper(funct_dict[feature_type], param_value)
+
+                # return analysis_result
             else:
-                print(f"Apologies, my current version isn't capable of carrying out commands.")
+                #if feature being asked for by user isn't in list of functions then, outputs the message below.
+                print(f"Apologies, my current version isn't capable of carrying out this specific commands.")
 
             user_input = input('Message VA: ')
 
