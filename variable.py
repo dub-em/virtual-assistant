@@ -1,3 +1,4 @@
+#Variables fro finetuning and creating custom models to help witht he manual function calling
 conv_or_comm_data = [
         {
             "messages": [
@@ -916,6 +917,7 @@ identify_feature = [
     ]
 
 
+#Variables for manual function calling, with each funciton argument and its corresponding prompt defined within for reference.
 feature_param = {'Web Analyzer':['url_link', 'purpose_of_analysis']}
 
 
@@ -925,3 +927,37 @@ feature_param_extract_prompt = {'Web Analyzer':{'url_link':"Please extract and o
 
 feature_param_request = {'Web Analyzer':{'url_link':"The url link needed to execute your request is missing. Please provide a url link.",
                                          'purpose_of_analysis':"The is no purpose of analysis in your request. Please specify a purpose of request."}}
+
+
+#Variable for automated function calling, with all the function attributes defined within.
+tools = [
+        {
+            "type": "function",
+            "function": {
+                "name": "web_crawler_feature",
+                "description": '''This function executes analysis of the contents of a given website link, using the purpose of analysis provided by the user e.g summarize content, look for a keyword etc.
+                    -It requires the following parameters: 'url_link','purpose_of_analysis'.
+                    -If any of the required parameters is missing, as for clarification from the user.
+                    -Do not make any assumption, always as for clarification if a user request is ambigious.
+                ''',
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "url_link": {
+                            "type": "string",
+                            "description": '''The url link of the website that the user want to have analysed, e.g. https://www.wes.org/digital-partnership-form.
+                                -Do not make any assumption as to what the url link is. If this isn't explicitly stated in the user input, request for it.
+                            ''',
+                        },
+                        "purpose_of_analysis": {
+                            "type": "string",
+                            "description": '''The user input regarding what the analysis is about, e.g summarize content, look for a keyword.
+                                -Do not make any assumption as to what the purpose of analysis is. If this isn't explicitly stated in the user input, request for it.
+                            ''',
+                        },
+                    },
+                    "required": ["url_link","purpose_of_analysis"],
+                },
+            },
+        }
+    ] 

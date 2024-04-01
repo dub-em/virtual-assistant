@@ -12,6 +12,7 @@ from fake_useragent import UserAgent
 from wrapt_timeout_decorator import timeout
 import concurrent.futures
 from config import settings
+import variable
 
 
 def execute_function_wrapper(func, arg):
@@ -295,8 +296,8 @@ def gpt_analyst(information):
 
 
 def web_crawler_feature(user_input):
-    '''This function executes a kind of overview analysis of the content to filter which contents should be
-    analysed and which should be discarded.
+    '''This function executes analysis of the contents of a given website link, using the 
+    purpose of analysis provided by the user e.g summarize content, look for a keyword etc.
     
     Parameters
     ----------

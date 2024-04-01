@@ -18,3 +18,7 @@ Next Steps
 	-If any parameter without a default value is missing, then ask the user to input that specific parameter again
 	-Send these parameter into the feature for execution
 	-Provide user with feedback.
+
+
+Helpful Links
+-https://platform.openai.com/docs/guides/function-calling?lang=python

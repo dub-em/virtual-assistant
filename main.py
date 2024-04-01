@@ -4,13 +4,15 @@ from langchain.chains.summarize import load_summarize_chain
 from langchain_pinecone import PineconeVectorStore
 from openai import OpenAI
 from config import settings
-import utilities
-import variable
+import utilities, variable, json
 
 
-def virtual_assistant():
+def manual_virtual_assistant():
     '''This function is the implementation of a virtual assistant that has conversational
-    abilities and command-related abilities too.'''
+    abilities and command-related abilities too.
+    
+    This version of the virtual assistant is manual mainly because the function calling element
+    is manually defined and identified sing customed finetune GPT models'''
 
     # Metadata and feature description of the virtual assistant
     meta_data = '''Virtual Assistant Metadata
@@ -114,5 +116,134 @@ def virtual_assistant():
             user_input = input('Message VA: ')
 
 
+def automated_virtual_assistant():
+    '''This function is the implementation of a virtual assistant that has conversational
+    abilities and command-related abilities too.
+    
+    This version of the virtual assistant is automated mainly because the function calling element
+    is implemented through GPT's in-built function identification feature.'''
+
+    client = OpenAI(
+        # This is the default and can be omitted
+        api_key=settings.openai_apikey,)
+    
+    # Metadata and feature description of the virtual assistant
+    meta_data = '''Virtual Assistant Metadata
+    
+    Name: Alfred
+
+    Description: Alfred is a virtual assistant capable of analyzing websites, and holding conversation on diverse topics especially EUR GDPR.
+    
+    Version: 0.01
+    
+    Author: Michael Dubem Igbomezie
+
+    Language Support: English
+    
+    Domain or Expertise: The specific domain or area of expertise in which the virtual assistant is designed to operate (e.g., finance, healthcare, customer service).
+    
+    List of Capabilities: Web Analyzer, YouTube Video Analyzer'''
+
+    feature_description = '''Virtual Assitant Feature Description
+
+    1. Web Analyzer: This function analyzes the contents of a website using user input.
+    
+    Parameters
+    ----------
+    url link (string): The url link of the website that the user want to have analysed.
+    prompt (string): The user input regarding what the analysis is about.
+
+    Returns
+    ----------
+    Returns the result of the analysis conducted by the LLM model.
+
+    
+    2. YouTube Video Analyzer: This function takes in video ID and analyzes the contents of the video.
+    
+    Parameters
+    ----------
+    video ID (string): The ID of the YouTube video to be analyzed.
+
+    Returns
+    ----------
+    Returns the result of the analysis conducted by the LLM model.
+    '''
+    
+    #Creates the prompt to punctuate the subtitle extracted from the given video
+    messages = [
+        {"role":"system","content":"you are a Virtual Assistant. Pleaase do not make any assumption about what value to plug into any function. If it is not explicitly stated, ask the user to input it."},
+        {"role":"system","content":meta_data},
+        {"role":"system","content":feature_description}]
+    
+    user_input = input('Message VA: ')
+    
+    while user_input != 'quit':
+
+        custom_knowledge = utilities.vectorstore_similaritysearch(user_input)
+        # print(f"\nCustom Knowledge: {custom_knowledge}\n")
+        
+        # Adds the custom knowledge and user input to the chat memory
+        messages.append({"role": "system", "content": custom_knowledge},)
+        messages.append({"role": "user", "content": user_input},)
+
+        chat_completion = client.chat.completions.create(
+            messages=messages,
+            model="gpt-3.5-turbo-0125",
+            temperature=0.0,
+            tools=variable.tools,
+            tool_choice="auto",  # auto is default, but we'll be explicit
+        )
+
+        #Response is extracted. 
+        response_message = chat_completion.choices[0].message
+        #If the user input is for a function execution, then tools_call is not None and response is None.
+        tool_calls = response_message.tool_calls
+        #If the user input is for conversation only, then tools_call is None and response is not None.
+        response = response_message.content
+
+        if tool_calls:
+            # Note: the JSON response may not always be valid; be sure to handle errors
+            available_functions = {
+                "web_crawler_feature": utilities.web_crawler_feature,
+            }  # only one function in this example, but you can have multiple
+
+            messages.append(response_message)  # extend conversation with assistant's reply
+            
+            for tool_call in tool_calls:
+                function_name = tool_call.function.name
+                function_to_call = available_functions[function_name]
+                function_args = json.loads(tool_call.function.arguments)
+                print(function_args)
+
+                #If GPT hallucination gets too much, then append the manual argument extraction here.
+                
+                # function_response = function_to_call(
+                #     location=function_args.get("location"),
+                #     unit=function_args.get("unit"),
+                # )
+
+                #Appending the response for previously identified functions to the chat memory is important before chat continues so system has the accurate context for the funciton identified, or else it will throw back an error message in the next prompt.
+                messages.append(
+                    {
+                        "tool_call_id": tool_call.id,
+                        "role": "tool",
+                        "name": function_name,
+                        "content": "function_response",
+                    }
+                )  # extend conversation with function response
+
+            second_response = client.chat.completions.create(
+                model="gpt-3.5-turbo-0125",
+                messages=messages,
+            )  # get a new response from the model where it can see the function response
+            # return second_response
+        elif response:
+            print(response)
+
+        user_input = input('Message VA: ')
+
+
+
 if __name__ == "__main__":
-    virtual_assistant()
+    # manual_virtual_assistant()
+    automated_virtual_assistant()
