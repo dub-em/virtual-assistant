@@ -5,6 +5,7 @@ from langchain_pinecone import PineconeVectorStore
 from openai import OpenAI
 from config import settings
 import utilities, variable, json
+import telebot
 
 
 def manual_virtual_assistant():
@@ -208,7 +209,8 @@ def automated_virtual_assistant():
             }  # only one function in this example, but you can have multiple
 
             messages.append(response_message)  # extend conversation with assistant's reply
-            
+            # print(response_message)
+
             for tool_call in tool_calls:
                 function_name = tool_call.function.name
                 function_to_call = available_functions[function_name]
@@ -238,12 +240,136 @@ def automated_virtual_assistant():
             )  # get a new response from the model where it can see the function response
             # return second_response
         elif response:
+            messages.append({"role": "assistant", "content": response},)
             print(response)
 
         user_input = input('Message VA: ')
 
 
+#Telegram Bot
+BOT_TOKEN = settings.telegram_token
+bot = telebot.TeleBot(BOT_TOKEN)
+
+
+def telegram_bot(messages, user_input):
+    '''This function is the implementation of a virtual assistant that has conversational
+    abilities and command-related abilities too.
+    
+    This version of the virtual assistant is automated mainly because the function calling element
+    is implemented through GPT's in-built function identification feature.'''
+
+    client = OpenAI(
+        # This is the default and can be omitted
+        api_key=settings.openai_apikey,)
+
+    custom_knowledge = utilities.vectorstore_similaritysearch(user_input)
+    # print(f"\nCustom Knowledge: {custom_knowledge}\n")
+    
+    # Adds the custom knowledge and user input to the chat memory
+    messages.append({"role": "system", "content": custom_knowledge},)
+    messages.append({"role": "user", "content": user_input},)
+
+    chat_completion = client.chat.completions.create(
+        messages=messages,
+        model="gpt-3.5-turbo-0125",
+        temperature=0.0,
+        tools=variable.tools,
+        tool_choice="auto",  # auto is default, but we'll be explicit
+    )
+
+    #Response is extracted. 
+    response_message = chat_completion.choices[0].message
+    #If the user input is for a function execution, then tools_call is not None and response is None.
+    tool_calls = response_message.tool_calls
+    #If the user input is for conversation only, then tools_call is None and response is not None.
+    response = response_message.content
+
+    if tool_calls:
+        # Note: the JSON response may not always be valid; be sure to handle errors
+        available_functions = {
+            "web_crawler_feature": utilities.web_crawler_feature,
+        }  # only one function in this example, but you can have multiple
+
+        chatcompletion_data = {
+            "content": response_message.content,
+            "role": response_message.role,
+            # "function_call": response_message.function_call,
+            "tool_calls": [
+                {
+                    "id": tool_call.id,
+                    "function": {
+                        "arguments": tool_call.function.arguments,
+                        "name": tool_call.function.name
+                    },
+                    "type": tool_call.type
+                }
+                for tool_call in response_message.tool_calls
+            ]
+        }
+        messages.append(chatcompletion_data)  # extend conversation with assistant's reply
+        
+        for tool_call in tool_calls:
+            function_name = tool_call.function.name
+            function_to_call = available_functions[function_name]
+            function_args = json.loads(tool_call.function.arguments)
+            print(function_args)
+
+            #If GPT hallucination gets too much, then append the manual argument extraction here.
+            
+            # function_response = function_to_call(
+            #     location=function_args.get("location"),
+            #     unit=function_args.get("unit"),
+            # )
+
+            #Appending the response for previously identified functions to the chat memory is important before chat continues so system has the accurate context for the funciton identified, or else it will throw back an error message in the next prompt.
+            messages.append(
+                {
+                    "tool_call_id": tool_call.id,
+                    "role": "tool",
+                    "name": function_name,
+                    "content": "function_response",
+                }
+            )  # extend conversation with function response
+
+        second_response = client.chat.completions.create(
+            model="gpt-3.5-turbo-0125",
+            messages=messages,
+        )  # get a new response from the model where it can see the function response
+        response = f"tool_call_id: {tool_call.id}, role: tool, name: {function_name}"
+        return messages, response
+    elif response:
+        messages.append({"role": "assistant", "content": response},)
+        return messages, response
+
+
+@bot.message_handler(commands=['start', 'hello'])
+def send_welcome(message):
+    bot.reply_to(message, "Howdy, how are you doing?")
+
+
+@bot.message_handler(func=lambda message: True)
+def echo_all(message):
+    path = f"messages.json"
+
+    print(message.text)
+
+    # Loads the .json file generated from extracting metadata for a given channel ID
+    with open(path, 'r') as file:
+        messages = json.load(file)
+
+    messages, response = telegram_bot(messages, str(message.text))
+
+    # Convert dictionary to JSON string
+    overall_messages = json.dumps(messages, indent=4)  # Use indent for pretty formatting
+
+    # Save JSON string to a file
+    with open(f"messages.json", "w") as json_file:
+        json_file.write(overall_messages)
+
+    bot.reply_to(message, response)
+
 
 if __name__ == "__main__":
     # manual_virtual_assistant()
-    automated_virtual_assistant()
+    # automated_virtual_assistant()
+    bot.infinity_polling()

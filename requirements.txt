@@ -13,3 +13,10 @@ selenium
 fake_useragent
 requests
 wrapt_timeout_decorator
+google-generativeai
+ipython
+google-cloud-aiplatform>=1.38
+google-auth
+google-auth-oauthlib
+google-auth-httplib2
+pyTelegramBotAPI

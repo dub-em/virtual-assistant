@@ -21,4 +21,21 @@ Next Steps
 
 
 Helpful Links
+OpenAI
 -https://platform.openai.com/docs/guides/function-calling?lang=python
+
+Google Gemini
+-https://cloud.google.com/vertex-ai/generative-ai/docs/start/quickstarts/quickstart-multimodal
+-https://cloud.google.com/vertex-ai/generative-ai/docs/multimodal/send-chat-prompts-gemini
+-https://cloud.google.com/vertex-ai/generative-ai/docs/multimodal/function-calling
+-https://cloud.google.com/vertex-ai/generative-ai/docs/models/tune-models
+-https://cloud.google.com/vertex-ai/generative-ai/docs/chat/chat-prompts
+-Gemini isn't available in the EU yet, but these are links that can be used in the event that it becomes available
+	-https://ai.google.dev/tutorials/python_quickstart
+	-https://ai.google.dev/docs/function_calling
+-https://cloud.google.com/vertex-ai/generative-ai/docs/models/tune-models
+
+TelegramBot
+-https://www.freecodecamp.org/news/how-to-create-a-telegram-bot-using-python/
+-https://github.com/eternnoir/pyTelegramBotAPI
+-https://core.telegram.org/bots
